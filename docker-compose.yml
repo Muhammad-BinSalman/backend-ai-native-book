@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend Service
+  api:
+    build: .
+    container_name: rag-chatbot-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./app:/app/app
+      - ./scripts:/app/scripts
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Qdrant Vector Database (Local)
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    container_name: rag-chatbot-qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  # Optional: Neon Postgres (use cloud Neon in production)
+  # This is only for local testing if you want a local Postgres instance
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: rag-chatbot-postgres
+  #   environment:
+  #     POSTGRES_USER: raguser
+  #     POSTGRES_PASSWORD: ragpass
+  #     POSTGRES_DB: ragchatbot
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+volumes:
+  qdrant_data:
+  # postgres_data:
